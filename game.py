@@ -22,16 +22,17 @@ from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResul
 from os.path import exists
 import json
 import sys
+from aiogram import types, Dispatcher, Bot
+from bounce import dp, bot, TOKEN
+
 
 # Enable logging
 logging.basicConfig(
     filename=datetime.now().strftime('log_game_%d_%m_%Y.log'),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S'
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("game_server")
 
-load_dotenv()
-TOKEN = os.getenv("TG_BOT_TOKEN")
 app = FastAPI()
 
 
@@ -40,8 +41,10 @@ logger.info("request")
 async def score(user_id: str, i_id: str, score: str, request: Request):
     try:
         logger.info("score request, user_id: " + str(user_id) + ", i_id:" + str(i_id) + ", score: " + str(score))
-        bot = Bot(token=TOKEN)
+        Dispatcher.set_current(dp)
+        Bot.set_current(bot)
         await bot.set_game_score(user_id = user_id, score = score, inline_message_id = i_id)
+        await bot.session.close()
         return Response(status_code=200)
     except Exception as e:
         logger.error("score error: " + str(e))
